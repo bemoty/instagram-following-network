@@ -4,6 +4,7 @@ body {
   height: 100vh;
   overflow: hidden;
   font-family: sans-serif;
+  background: black;
 }
 
 .container {

@@ -73,7 +73,7 @@ async function navigate(driver, data) {
     }
     console.log(`Checking user '${user.name}'`)
     await driver.get(`https://instagram.com/${user.name}`)
-    await driver.sleep(3500) // instagram sometimes takes ages to load
+    await sleep(driver, 3500, 4000) // instagram sometimes takes ages to load
 
     // Select the Instagram following button
     var followingButton
@@ -120,9 +120,9 @@ async function navigate(driver, data) {
             lastLength: 0,
             noChangeCounter: 0,
           }
-          await driver.sleep(30000)
+          await sleep(driver, 30000)
           await driver.navigate().refresh()
-          await driver.sleep(10000) // wait some extra for the follow window to appear
+          await sleep(driver, 10000) // wait some extra for the follow window to appear
           // we don't have to click the following button here because the url /following opens it automatically
           continue
         }
@@ -137,14 +137,14 @@ async function navigate(driver, data) {
         rateLimitedCache.noChangeCounter = 0
       }
 
-      await driver.sleep(1000)
+      await sleep(driver, 2000, 2500)
       // scrolling in selenium javascript is not implemented yet (bruh), so we'll have to
       // use a workaround (see https://www.selenium.dev/documentation/webdriver/actions_api/wheel/)
       await driver.executeScript(
         `document.querySelector('${FOLLOWING_WINDOW_LAST_FOLLOWING_SELECTOR}').scrollIntoView(true)`,
         [],
       )
-      await driver.sleep(2000)
+      await sleep(driver, 2000, 3000)
     }
     const followings = await getFollowingAccounts(driver)
     console.log(`Storing ${followings.length} followings for ${user.name}`)
@@ -159,6 +159,9 @@ async function navigate(driver, data) {
     // update data so we don't check the user again
     dataCopy.splice(0, 1)
     await updateData(dataCopy)
+
+    // wait some extra time before moving on, maybe this will get us rate limited later
+    await sleep(driver, 7000, 15000)
   }
   console.log("We're done here...")
 }
@@ -181,6 +184,23 @@ async function getExportData() {
       }
     })
   })
+}
+
+
+/** @param {ThenableWebDriver} driver */
+async function sleep(driver, base, max) {
+  const upper = 1200
+  if (!max) {
+    return await driver.sleep(random(base, base + upper))
+  }
+  if (base > max) {
+    throw new Error('base > max')
+  }
+  return await driver.sleep(random(base, max))
+}
+
+function random(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
 /** @param {ThenableWebDriver} driver */

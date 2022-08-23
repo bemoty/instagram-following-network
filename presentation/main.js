@@ -2,127 +2,6 @@ const file = 'export.json'
 const width = window.innerWidth
 const height = window.innerHeight
 
-// we don't care about memepages, celebrities, bands, etc., so we filter them here
-const ignoredAccounts = [
-  'gronkh',
-  'unge',
-  '9gag',
-  'memezar',
-  'memelord',
-  'rammsteinofficial',
-  'meme.ig',
-  'nugget',
-  'billieeilish',
-  'funnyposts',
-  'witchernetflix',
-  'shirindavid',
-  'stefaniegiesinger',
-  'zendaya',
-  'arianagrande',
-  'hoenest',
-  'colesprouse',
-  'advice',
-  'memequeen',
-  'i_have_no_memes96_v2',
-  'pubity',
-  'badgalriri',
-  'annitheduck',
-  'feliciathegoat',
-  'lilpeep',
-  'bbnomula',
-  'bringmethehorizon',
-  'dog',
-  'aoc',
-  'alternative.outfits.ideas',
-  'bunkerjunge.v2',
-  'jasmingnu',
-  'pandorya',
-  'dealbunny.de',
-  'wtf.social',
-  'isyoufunny',
-  'lachkrampfbilder',
-  'deeplovegoals',
-  'nannie',
-  'spontanablack',
-  'handiofiblood',
-  'revedtv',
-  'jujuvierundvierzig',
-  'rezo',
-  'badmomzjay',
-  'bibisbeautypalace',
-  'jokezar',
-  'vong',
-  'ich.und.der.alkohol',
-  'bowerjamie',
-  'world_record_egg',
-  'instamoregame',
-  'tattoofrei',
-  'kurde.der.was.wurde',
-  'hiroshimas.verstrahlter.junge',
-  'couplesnote',
-  'milliebobbybrown',
-  'hitsblunt',
-  'hiroshimas.verstrahlter.junge1',
-  'iamcardib',
-  'originalcandleguy',
-  'olobersykes',
-  'leagueoflegends',
-  'first',
-  'bunkerjunge.v2',
-  'ironieposts',
-  'epicfunnypage',
-  'greatestreactions',
-  'kidsgettinghurt',
-  'instamemez.de',
-  'raffasplasticlife',
-  'theweeknd',
-  'crispyrob',
-  'kendalljenner',
-  'kyliejenner',
-  'travisscott',
-  'rintintin',
-  'monk.bhz',
-  'bhz030',
-  'suicideboys',
-  'longusmongusbhz',
-  'makko.hatdichlieb',
-  'f1',
-  'carlossainz55',
-  'landonorris',
-  'saradesideria',
-  'werenotreallystrangers',
-  'vinivicimusic',
-  'k.ronaldo2016',
-  'rickandmorty',
-  'kaliuchis',
-  'kuchentv',
-  'therealjanboehmermann',
-  'sza',
-  'faktillon',
-  'binbetrunken',
-  'burgerkingaustria',
-  'kitthey',
-  'nathanwpylestrangeplanet',
-  'beeple_crap',
-  'kidd',
-  'faker',
-  'kendricklamar',
-  'inscopenico',
-  'bmw',
-  'redbull',
-  'wizkhalifa',
-  'kronen.zeitung',
-  'coupleontour',
-  'simplicissimusyt',
-  'recht2go',
-  'nasa',
-  'nasahubble',
-  'vansskate',
-  'supremenewyork',
-  'sascha_huber_official',
-  'dailyotis'
-]
-
 /** @param {boolean} loading */
 const setLoading = (loading) => {
   if (loading) {
@@ -132,15 +11,13 @@ const setLoading = (loading) => {
   }
 }
 
-const prepareData = (data) => {
+const prepareData = (data, ignored) => {
   const allFollowings = data.flatMap((usr) => usr.followings)
-  const nodes = [
-    ...new Set(allFollowings.concat(data.map((usr) => usr.name))),
-  ].filter(
-    (usr) => allFollowings.filter((name) => name === usr).length > 1, // remove users who are only followed once ...
-  ).filter(
-    (usr) => !ignoredAccounts.includes(usr),
-  )
+  const nodes = [...new Set(allFollowings.concat(data.map((usr) => usr.name)))]
+    .filter(
+      (usr) => allFollowings.filter((name) => name === usr).length > 1, // remove users who are only followed once ...
+    )
+    .filter((usr) => !ignored.includes(usr))
   const links = []
   for (let i = 0; i < data.length; i++) {
     const source = nodes.indexOf(data[i].name)
@@ -161,13 +38,16 @@ const prepareData = (data) => {
   }
 }
 
-const generateChart = (data) => {
-  const { nodes, links } = prepareData(data)
+const generateChart = (data, ignored) => {
+  const { nodes, links } = prepareData(data, ignored)
+
   var circleObjects
   var linkObjects
   var focusedNode
+  var rootNode
   var hoveredNode
   var nodeStack = []
+
   const setHoveredNode = (user) => {
     const output = d3.select('#node-hover-name')
     hoveredNode = user
@@ -177,6 +57,7 @@ const generateChart = (data) => {
       output.text('-')
     }
   }
+
   const setFocusedNode = (index, back) => {
     if (focusedNode && index === focusedNode.index) {
       return
@@ -196,20 +77,25 @@ const generateChart = (data) => {
               .map((link) => link.source),
           ),
       }
-      d3.select('#node-name').text(nodes[index].name)
+      if (!rootNode) {
+        rootNode = focusedNode
+      }
+      d3.select('#node-link').attr('href', index != null ? `https://instagram.com/${nodes[index].name}` : '#')
+      d3.select('#node-link').text(nodes[index].name)
       ticked()
       return
     }
     focusedNode = null
-    d3.select('#node-name').text('-')
+    d3.select('#node-link').text('-')
     ticked()
   }
+
   d3.select('#node-back').on('click', () =>
     setFocusedNode(nodeStack.pop(), true),
   )
   const nodesCopy = nodes.map((node) => ({ ...node }))
   const linksCopy = links.map((link) => ({ ...link }))
-  setFocusedNode(0, true)
+  setFocusedNode(nodes.findIndex(usr => usr.name === 'joshoty'), true)
 
   // Zoom handling
   const zoom = d3.zoom().on('zoom', handleZoom)
@@ -244,7 +130,7 @@ const generateChart = (data) => {
           d.source.index === focusedNode.index ||
           d.target.index === focusedNode.index
         ) {
-          return '#9e9e9e'
+          return '#ccc'
         }
       })
       .attr('x1', function (d) {
@@ -277,11 +163,14 @@ const generateChart = (data) => {
         if (d.name === 'joshoty') {
           return '#cc2e20' // i'm special!
         }
+        if (rootNode && rootNode.connections.includes(d.index)) {
+          return '#ff796e' // all nodes that are connected to the root node (me) are special
+        }
         if (!focusedNode) {
           return '#2896d6'
         }
         if (d.index == focusedNode.index) {
-          return '#000'
+          return '#fff'
         }
         return focusedNode.connections.includes(d.index) ? '#2896d6' : '#a0d7f7'
       })
@@ -293,7 +182,6 @@ const generateChart = (data) => {
       })
       .on('click', function (d) {
         const user = d.target.__data__
-        console.log('clicked', user)
         setFocusedNode(user.index)
       })
       .on('mouseover', function (d) {
@@ -374,5 +262,6 @@ const generateChart = (data) => {
 
 ;(async () => {
   data = await d3.json(file).then((data) => data)
-  generateChart(data)
+  ignored = await d3.json('ignored.json').then((data) => data)
+  generateChart(data, ignored)
 })()
