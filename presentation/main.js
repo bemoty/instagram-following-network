@@ -43,13 +43,35 @@ const generateChart = (data) => {
   var circleObjects
   var linkObjects
   var focusedNode
-  const setFocusedNode = (index) => {
+  var hoveredNode
+  var nodeStack = []
+  const setHoveredNode = (user) => {
+    const output = d3.select('#node-hover-name')
+    hoveredNode = user
+    if (hoveredNode) {
+      output.text(hoveredNode.name)
+    } else {
+      output.text('-')
+    }
+  }
+  const setFocusedNode = (index, back) => {
+    if (focusedNode && index === focusedNode.index) {
+      return
+    }
+    if (!back && focusedNode) {
+      nodeStack.push(focusedNode.index)
+    }
     if (index != null) {
       focusedNode = {
         index,
         connections: links
           .filter((link) => link.source === index)
-          .map((link) => link.target),
+          .map((link) => link.target)
+          .concat(
+            links
+              .filter((link) => link.target === index)
+              .map((link) => link.source),
+          ),
       }
       d3.select('#node-name').text(nodes[index].name)
       ticked()
@@ -59,8 +81,12 @@ const generateChart = (data) => {
     d3.select('#node-name').text('-')
     ticked()
   }
-  setFocusedNode(0)
-  console.log(focusedNode)
+  d3.select('#node-back').on('click', () =>
+    setFocusedNode(nodeStack.pop(), true),
+  )
+  const nodesCopy = nodes.map((node) => ({ ...node }))
+  const linksCopy = links.map((link) => ({ ...link }))
+  setFocusedNode(0, true)
 
   // Zoom handling
   const zoom = d3.zoom().on('zoom', handleZoom)
@@ -73,10 +99,10 @@ const generateChart = (data) => {
     const p = transform.invert(d3.pointer(e))
   })
 
-  d3.forceSimulation(nodes)
+  d3.forceSimulation(nodesCopy)
     .force('charge', d3.forceManyBody().strength(-250))
     .force('center', d3.forceCenter(width / 2, height / 2))
-    .force('link', d3.forceLink().links(links))
+    .force('link', d3.forceLink().links(linksCopy))
     .on('tick', ticked)
 
   setLoading(false)
@@ -85,7 +111,7 @@ const generateChart = (data) => {
     linkObjects = d3
       .select('#theg')
       .selectAll('line')
-      .data(links)
+      .data(linksCopy)
       .join('line')
       .style('stroke', function (d) {
         if (!focusedNode) {
@@ -116,13 +142,13 @@ const generateChart = (data) => {
     circleObjects = d3
       .select('#theg')
       .selectAll('circle')
-      .data(nodes)
+      .data(nodesCopy)
       .join('circle')
       .attr('r', function (d) {
         if (focusedNode && focusedNode.index == d.index) {
-          return 10
+          return 15
         }
-        return 5
+        return 10
       })
       .style('fill', function (d) {
         if (d.name === 'joshoty') {
@@ -146,6 +172,13 @@ const generateChart = (data) => {
         const user = d.target.__data__
         console.log('clicked', user)
         setFocusedNode(user.index)
+      })
+      .on('mouseover', function (d) {
+        const user = d.target.__data__
+        setHoveredNode(user)
+      })
+      .on('mouseout', function (d) {
+        setHoveredNode(null)
       })
   }
 

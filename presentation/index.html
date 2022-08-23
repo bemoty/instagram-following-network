@@ -3,19 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>💭 Bubble chart with D3.js</title>
+    <title>Instagram Network Visualization</title>
 
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div id="loading" style="display: block">
-      <h1>Loading ...</h1>
-    </div>
     <div class="infobox">
-        <div>
-            <p>Currently active node</p>
-            <p id="node-name">-</p>
-        </div>
+      <div>
+        <p class="header">Currently active node</p>
+        <p id="node-name">-</p>
+        <p class="header">Currently hovered node</p>
+        <p id="node-hover-name">-</p>
+        <h1 id="loading">Loading ...</h1>
+        <a href="javascript:void(0)" id="node-back">Back</a>
+      </div>
     </div>
     <div class="container">
       <svg id="chart">
@@ -33,6 +34,6 @@
     <script src="https://cdn.jsdelivr.net/npm/d3-transition@3"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3-drag@3"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3-zoom@3"></script>
-    <script src="bubble.js"></script>
+    <script src="main.js"></script>
   </body>
 </html>
