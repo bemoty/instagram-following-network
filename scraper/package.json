@@ -1,0 +1,17 @@
+{
+  "name": "insta",
+  "version": "1.0.0",
+  "author": "Joshua Winkler <joshua.winkler@student.uibk.ac.at>",
+  "license": "ISC",
+  "private": true,
+  "scripts": {
+    "start": "node index.js",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "selenium-webdriver": "^4.4.0"
+  },
+  "devDependencies": {
+    "prettier": "^2.7.1"
+  }
+}

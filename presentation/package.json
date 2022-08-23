@@ -1,0 +1,16 @@
+{
+  "name": "insta-d3",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Joshua Winkler <joshua.winkler@uibk.ac.at>",
+  "license": "ISC",
+  "private": true,
+  "scripts": {
+    "start": "serve .",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "prettier": "^2.7.1",
+    "serve": "^14.0.1"
+  }
+}
