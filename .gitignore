@@ -12,6 +12,8 @@ dist
 # production
 /build
 export.json
+import.json
+import.original.json
 data.json
 data.original.json
 /scraper/selenium

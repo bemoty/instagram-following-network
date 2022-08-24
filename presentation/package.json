@@ -1,7 +1,6 @@
 {
-  "name": "insta-d3",
+  "name": "instagram-following-network-presentation",
   "version": "1.0.0",
-  "main": "index.js",
   "author": "Joshua Winkler <joshua.winkler@uibk.ac.at>",
   "license": "ISC",
   "private": true,
