@@ -51,18 +51,27 @@ async function navigate(
   importData: Import[],
   exportData: Export[],
 ) {
+  const importDataCopy = [...importData]
   for (let i = 0; i < importData.length; i++) {
     let user = importData[i]
     if (user.famous) {
       // we ignore verified users, its usually not interesting who they follow
       console.log(`Skipping verified user '${user.name}'`)
-      importData.splice(0, 1)
-      await writeImport(importData)
+      await nextEntry(importDataCopy)
       continue
     }
     console.log(`Checking user '${user.name}'`)
     await driver.get(`https://instagram.com/${user.name}`)
     await sleep(driver, 3500, 4000) // instagram sometimes takes ages to load
+
+    const following = await getFollowingNumber(driver)
+    console.log(`${user.name} is following ${following} people`)
+
+    if (following === 0) {
+      console.log(`${user.name} has no following, skipping`)
+      await nextEntry(importDataCopy)
+      continue
+    }
 
     // Select the Instagram following button
     var followingButton
@@ -76,21 +85,18 @@ async function navigate(
       console.log(
         "If that doesn't work, Instagram might have changed the CSS selector",
       )
-      driver.quit()
-      exit(0)
+      await quit(driver)
     }
-    const following = await getFollowingNumber(driver)
-    console.log(`${user.name} is following ${following} people`)
 
     // scroll down the following window, then retrieve all the followings
     let rateLimitedCache = {
-      lastLength: 0,
+      lastLength: -1,
       noChangeCounter: 0,
     }
     for (;;) {
       let accounts = await findFollowingAccounts(driver)
       // sometimes, the following count is off by one or two, dunno why, it's insta being weird
-      if (accounts.length >= following - 2) {
+      if (accounts.length >= following - 1) {
         break
       }
       if (accounts.length === rateLimitedCache.lastLength) {
@@ -98,7 +104,7 @@ async function navigate(
           console.log(
             'We are definitely rate limited, shutting down. Please try again later.',
           )
-          exit(0)
+          await quit(driver)
         }
         console.log(
           `We might be rate limited, iteration ${
@@ -125,13 +131,23 @@ async function navigate(
     await writeExport(exportData)
 
     // update data so we don't check the user again
-    importData.splice(0, 1)
-    await writeImport(importData)
+    await nextEntry(importDataCopy)
 
     // wait some extra time before moving on, maybe this will get us rate limited later
     await sleep(driver, 7000, 15000)
   }
   console.log("We're done here...")
+  await quit(driver)
+}
+
+async function nextEntry(importData: Import[]) {
+  importData.splice(0, 1)
+  await writeImport(importData)
+}
+
+async function quit(driver: WebDriver, exitCode?: number) {
+  await driver.quit()
+  exit(exitCode ?? 0)
 }
 
 main()

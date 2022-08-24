@@ -1,5 +1,7 @@
 node_modules
 selenium
 data.json
+import.json
+import.original.json
 data.original.json
 export.json
