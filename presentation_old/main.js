@@ -13,10 +13,11 @@ const setLoading = (loading) => {
 
 const prepareData = (data, ignored) => {
   const allFollowings = data.flatMap((usr) => usr.followings)
-  const nodes = [...new Set(allFollowings.concat(data.map((usr) => usr.name)))]
+  console.log(allFollowings)
+  const nodes = [...new Set(allFollowings)]
     .filter(
-      (usr) => allFollowings.filter((name) => name === usr).length > 1, // remove users who are only followed once ...
-    )
+      (usr) => allFollowings.filter((name) => name === usr).length >= 2, // remove users who are only followed once ...
+    ).concat(data.map((usr) => usr.name))
     .filter((usr) => !ignored.includes(usr))
   const links = []
   for (let i = 0; i < data.length; i++) {
@@ -80,7 +81,10 @@ const generateChart = (data, ignored) => {
       if (!rootNode) {
         rootNode = focusedNode
       }
-      d3.select('#node-link').attr('href', index != null ? `https://instagram.com/${nodes[index].name}` : '#')
+      d3.select('#node-link').attr(
+        'href',
+        index != null ? `https://instagram.com/${nodes[index].name}` : '#',
+      )
       d3.select('#node-link').text(nodes[index].name)
       ticked()
       return
@@ -95,7 +99,10 @@ const generateChart = (data, ignored) => {
   )
   const nodesCopy = nodes.map((node) => ({ ...node }))
   const linksCopy = links.map((link) => ({ ...link }))
-  setFocusedNode(nodes.findIndex(usr => usr.name === 'joshoty'), true)
+  setFocusedNode(
+    nodes.findIndex((usr) => usr.name === 'joshoty'),
+    true,
+  )
 
   // Zoom handling
   const zoom = d3.zoom().on('zoom', handleZoom)
