@@ -1,29 +1,19 @@
-import { select as d3Select, ValueFn as d3ValueFn } from 'd3-selection'
-import {
-  zoom as d3Zoom,
-  zoomIdentity as d3ZoomIdentity,
-  ZoomTransform as d3ZoomTransform,
-  D3ZoomEvent as d3ZoomEvent,
-} from 'd3-zoom'
-import {
-  forceSimulation as d3ForceSimulation,
-  forceManyBody as d3ForceManyBody,
-  forceLink as d3ForceLink,
-  forceCenter as d3ForceCenter,
-} from 'd3-force'
-import { json as d3Json, pointer as d3Pointer } from 'd3'
+const d3 = require('d3')
 
+const file = 'export.json'
 const width = window.innerWidth
 const height = window.innerHeight
 
-const prepareData = (data: any, ignored: any) => {
-  const allFollowings = data.flatMap((usr: any) => usr.followings)
-  const nodes = [
-    ...new Set(allFollowings.concat(data.map((usr: any) => usr.name))),
-  ]
-    .filter(
-      (usr) => allFollowings.filter((name: any) => name === usr).length > 1, // remove users who are only followed once ...
-    )
+/** @param {boolean} loading */
+const doneLoading = () => {
+  document.getElementById('loading').remove()
+}
+
+const prepareData = (data, ignored) => {
+  const allFollowings = data.flatMap((usr) => usr.followings)
+  const nodes = [...new Set(allFollowings.filter(
+    (usr) => allFollowings.filter((name) => name === usr).length >= 2, // remove users who are only followed once ...
+  ).concat(data.map((usr) => usr.name)))]
     .filter((usr) => !ignored.includes(usr))
   const links = []
   for (let i = 0; i < data.length; i++) {
@@ -45,18 +35,18 @@ const prepareData = (data: any, ignored: any) => {
   }
 }
 
-const generateChart = (data: any, ignored: any) => {
+const generateChart = (data, ignored) => {
   const { nodes, links } = prepareData(data, ignored)
 
   var circleObjects
   var linkObjects
-  var focusedNode: any
-  var rootNode: any
+  var focusedNode
+  var rootNode
   var hoveredNode
-  var nodeStack: any = []
+  var nodeStack = []
 
-  const setHoveredNode = (user: any) => {
-    const output = d3Select('#node-hover-name')
+  const setHoveredNode = (user) => {
+    const output = d3.select('#node-hover-name')
     hoveredNode = user
     if (hoveredNode) {
       output.text(hoveredNode.name)
@@ -65,7 +55,7 @@ const generateChart = (data: any, ignored: any) => {
     }
   }
 
-  const setFocusedNode = (index: any, back?: any) => {
+  const setFocusedNode = (index, back) => {
     if (focusedNode && index === focusedNode.index) {
       return
     }
@@ -87,20 +77,20 @@ const generateChart = (data: any, ignored: any) => {
       if (!rootNode) {
         rootNode = focusedNode
       }
-      d3Select('#node-link').attr(
+      d3.select('#node-link').attr(
         'href',
         index != null ? `https://instagram.com/${nodes[index].name}` : '#',
       )
-      d3Select('#node-link').text(nodes[index].name as string)
+      d3.select('#node-link').text(nodes[index].name)
       ticked()
       return
     }
     focusedNode = null
-    d3Select('#node-link').text('-')
+    d3.select('#node-link').text('-')
     ticked()
   }
 
-  d3Select('#node-back').on('click', () =>
+  d3.select('#node-back').on('click', () =>
     setFocusedNode(nodeStack.pop(), true),
   )
   const nodesCopy = nodes.map((node) => ({ ...node }))
@@ -111,28 +101,43 @@ const generateChart = (data: any, ignored: any) => {
   )
 
   // Zoom handling
-  const zoom = d3Zoom().on('zoom', handleZoom)
-  var transform: d3ZoomTransform
-  function handleZoom(e: d3ZoomEvent<any, any>) {
-    d3Select('svg g').attr('transform', (transform = e.transform) as any)
+  const zoom = d3.zoom().on('zoom', handleZoom)
+  var transform
+  function handleZoom(e) {
+    d3.select('svg g').attr('transform', (transform = e.transform))
   }
-  d3Select('svg')
-    .call(zoom as any)
-    .call(zoom.transform as any, d3ZoomIdentity)
-  d3Select('svg').on('pointermove', (e) => {
-    const p = transform.invert(d3Pointer(e))
-  });
+  d3.select('svg').call(zoom).call(zoom.transform, d3.zoomIdentity)
+  d3.select('svg').on('pointermove', (e) => {
+    const p = transform.invert(d3.pointer(e))
+  })
 
-  (window as any).d3Loading = false
+  d3.select('#node-search-box').on('change', (event) => {
+    const search = event.target.value
+    const index = nodes.findIndex((usr) => usr.name === search)
+    if (index == -1) {
+      alert('User not found')
+    } else {
+      setFocusedNode(index)
+    }
+  })
+  const notedAccounts = []
+  d3.select('#node-remove-active').on('click', () => {
+    notedAccounts.push(nodes[focusedNode.index].name)
+    navigator.clipboard.writeText("\"" + notedAccounts.join('","') + "\"")
+    setFocusedNode(nodeStack.pop(), true)
+  })
 
-  d3ForceSimulation(nodesCopy as any)
-    .force('charge', d3ForceManyBody().strength(-250))
-    .force('center', d3ForceCenter(width / 2, height / 2))
-    .force('link', d3ForceLink().links(linksCopy))
+  d3.forceSimulation(nodesCopy)
+    .force('charge', d3.forceManyBody().strength(-250))
+    .force('center', d3.forceCenter(width / 2, height / 2))
+    .force('link', d3.forceLink().links(linksCopy))
     .on('tick', ticked)
 
+  doneLoading()
+
   function updateLinks() {
-    linkObjects = d3Select('#theg')
+    linkObjects = d3
+      .select('#theg')
       .selectAll('line')
       .data(linksCopy)
       .join('line')
@@ -146,33 +151,34 @@ const generateChart = (data: any, ignored: any) => {
         ) {
           return '#ccc'
         }
-      } as d3ValueFn<any, any, any>)
-      .attr('x1', function (d: any) {
+      })
+      .attr('x1', function (d) {
         return d.source.x
       })
-      .attr('y1', function (d: any) {
+      .attr('y1', function (d) {
         return d.source.y
       })
-      .attr('x2', function (d: any) {
+      .attr('x2', function (d) {
         return d.target.x
       })
-      .attr('y2', function (d: any) {
+      .attr('y2', function (d) {
         return d.target.y
       })
   }
 
   function updateNodes() {
-    circleObjects = d3Select('#theg')
+    circleObjects = d3
+      .select('#theg')
       .selectAll('circle')
       .data(nodesCopy)
       .join('circle')
-      .attr('r', function (d: any) {
+      .attr('r', function (d) {
         if (focusedNode && focusedNode.index == d.index) {
           return 15
         }
         return 10
       })
-      .style('fill', function (d: any) {
+      .style('fill', function (d) {
         if (d.name === 'joshoty') {
           return '#cc2e20' // i'm special!
         }
@@ -187,10 +193,10 @@ const generateChart = (data: any, ignored: any) => {
         }
         return focusedNode.connections.includes(d.index) ? '#2896d6' : '#a0d7f7'
       })
-      .attr('cx', function (d: any) {
+      .attr('cx', function (d) {
         return d.x
       })
-      .attr('cy', function (d: any) {
+      .attr('cy', function (d) {
         return d.y
       })
       .on('click', function (d) {
@@ -212,8 +218,8 @@ const generateChart = (data: any, ignored: any) => {
   }
 }
 
-export default async function init() {
-  const data = await d3Json('export.json').then((data) => data)
-  const ignored = await d3Json('ignored.json').then((data) => data)
+;(async () => {
+  const data = await d3.json(file).then((data) => data)
+  const ignored = await d3.json('ignored.json').then((data) => data)
   generateChart(data, ignored)
-}
+})()
