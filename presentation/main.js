@@ -82,12 +82,12 @@ const generateChart = (data, ignored) => {
         index != null ? `https://instagram.com/${nodes[index].name}` : '#',
       )
       d3.select('#node-link').text(nodes[index].name)
-      ticked()
+      reload()
       return
     }
     focusedNode = null
     d3.select('#node-link').text('-')
-    ticked()
+    reload()
   }
 
   d3.select('#node-back').on('click', () =>
@@ -131,13 +131,10 @@ const generateChart = (data, ignored) => {
     .force('charge', d3.forceManyBody().strength(-250))
     .force('center', d3.forceCenter(width / 2, height / 2))
     .force('link', d3.forceLink().links(linksCopy))
-    .on('tick', ticked)
-
-  doneLoading()
+    .on('end', reload)
 
   function updateLinks() {
-    linkObjects = d3
-      .select('#theg')
+    d3.select('#theg')
       .selectAll('line')
       .data(linksCopy)
       .join('line')
@@ -167,8 +164,7 @@ const generateChart = (data, ignored) => {
   }
 
   function updateNodes() {
-    circleObjects = d3
-      .select('#theg')
+    d3.select('#theg')
       .selectAll('circle')
       .data(nodesCopy)
       .join('circle')
@@ -212,9 +208,12 @@ const generateChart = (data, ignored) => {
       })
   }
 
-  function ticked() {
+  function reload() {
     updateLinks()
     updateNodes()
+    setTimeout(() => {
+      doneLoading()
+    }, 1000)
   }
 }
 
