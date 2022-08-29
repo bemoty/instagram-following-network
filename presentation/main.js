@@ -11,10 +11,15 @@ const doneLoading = () => {
 
 const prepareData = (data, ignored) => {
   const allFollowings = data.flatMap((usr) => usr.followings)
-  const nodes = [...new Set(allFollowings.filter(
-    (usr) => allFollowings.filter((name) => name === usr).length >= 2, // remove users who are only followed once ...
-  ).concat(data.map((usr) => usr.name)))]
-    .filter((usr) => !ignored.includes(usr))
+  const nodes = [
+    ...new Set(
+      allFollowings
+        .filter(
+          (usr) => allFollowings.filter((name) => name === usr).length >= 2, // remove users who are only followed once ...
+        )
+        .concat(data.map((usr) => usr.name)),
+    ),
+  ].filter((usr) => !ignored.includes(usr))
   const links = []
   for (let i = 0; i < data.length; i++) {
     const source = nodes.indexOf(data[i].name)
@@ -95,10 +100,6 @@ const generateChart = (data, ignored) => {
   )
   const nodesCopy = nodes.map((node) => ({ ...node }))
   const linksCopy = links.map((link) => ({ ...link }))
-  setFocusedNode(
-    nodes.findIndex((usr) => usr.name === 'joshoty'),
-    true,
-  )
 
   // Zoom handling
   const zoom = d3.zoom().on('zoom', handleZoom)
@@ -123,7 +124,7 @@ const generateChart = (data, ignored) => {
   const notedAccounts = []
   d3.select('#node-remove-active').on('click', () => {
     notedAccounts.push(nodes[focusedNode.index].name)
-    navigator.clipboard.writeText("\"" + notedAccounts.join('","') + "\"")
+    navigator.clipboard.writeText('"' + notedAccounts.join('","') + '"')
     setFocusedNode(nodeStack.pop(), true)
   })
 
@@ -131,7 +132,14 @@ const generateChart = (data, ignored) => {
     .force('charge', d3.forceManyBody().strength(-250))
     .force('center', d3.forceCenter(width / 2, height / 2))
     .force('link', d3.forceLink().links(linksCopy))
-    .on('end', reload)
+    .on('end', () => {
+      reload()
+      setFocusedNode(
+        nodes.findIndex((usr) => usr.name === 'joshoty'),
+        true,
+      )
+      doneLoading()
+    })
 
   function updateLinks() {
     d3.select('#theg')
@@ -211,9 +219,6 @@ const generateChart = (data, ignored) => {
   function reload() {
     updateLinks()
     updateNodes()
-    setTimeout(() => {
-      doneLoading()
-    }, 1000)
   }
 }
 
