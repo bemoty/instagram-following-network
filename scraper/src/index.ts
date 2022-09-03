@@ -93,6 +93,7 @@ async function navigate(
       lastLength: -1,
       noChangeCounter: 0,
     }
+    let rateLimited = false;
     for (;;) {
       let accounts = await findFollowingAccounts(driver)
       // sometimes, the following count is off by one or two, dunno why, it's insta being weird
@@ -104,7 +105,8 @@ async function navigate(
           console.log(
             'We are definitely rate limited, shutting down. Please try again later.',
           )
-          await quit(driver)
+          rateLimited = true
+          break
         }
         console.log(
           `We might be rate limited, iteration ${
@@ -130,6 +132,11 @@ async function navigate(
     })
     await writeExport(exportData)
 
+    if (rateLimited) {
+      // we are rate limited, let's quit
+      await quit(driver, 0)
+      return
+    }
     // update data so we don't check the user again
     await nextEntry(importDataCopy)
 
