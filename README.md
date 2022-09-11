@@ -53,6 +53,8 @@ TODO
 
 Now, simply run the scraper by opening a terminal in the `/scraper` directory and running `yarn start`.
 
+The first time you do this, the application will ask you to log in, as it otherwise cannot retrieve the following count. Log in and re-run the app.
+
 A Chromium browser window will open and automatically navigate to the profiles scraped in step 2. The scraper will automatically shut down once it detects that Instagram has blocked you and exits.
 
 You then have to re-run the the scraper on the next day (you're usually unblocked by then) and continue until the import file is empty.

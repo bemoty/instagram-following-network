@@ -64,26 +64,40 @@ async function navigate(
     await driver.get(`https://instagram.com/${user.name}`)
     await sleep(driver, 3500, 4000) // instagram sometimes takes ages to load
 
-    const following = await getFollowingNumber(driver)
-    console.log(`${user.name} is following ${following} people`)
-
+    const following = await getFollowingNumber(driver).catch(async () => {
+      if (i === 0) {
+        // if the first entry fails, the selectors may be outdated
+        console.error(
+          `Could not retrieve following numer for '${user.name}'. Exiting as it was the first attempt (try updating the selectors)`,
+        )
+        await quit(driver, -1)
+      }
+      console.log(
+        `Could not retrieve following numer for '${user.name}'. Skipping. (Deleted user?)`,
+      )
+      return 0
+    })
     if (following === 0) {
       console.log(`${user.name} has no following, skipping`)
       await nextEntry(importDataCopy)
       continue
     }
+    console.log(`${user.name} is following ${following} people`)
 
     // Select the Instagram following button
-    var followingButton
-    try {
-      followingButton = await findFollowingButton(driver)
+    const followingButton = await findFollowingButton(driver).catch(
+      async () => {
+        return null
+      },
+    )
+    if (followingButton) {
       followingButton.click()
-    } catch (err) {
+    } else {
       console.log(
         'Could not find following button. Please log in and restart the script.',
       )
       console.log(
-        "If that doesn't work, Instagram might have changed the CSS selector",
+        "If that doesn't work, Instagram might have changed the CSS selector (or the person removed you from their followers)",
       )
       await quit(driver)
     }
@@ -93,23 +107,27 @@ async function navigate(
       lastLength: -1,
       noChangeCounter: 0,
     }
-    let rateLimited = false;
+    let rateLimited = false
     for (;;) {
       let accounts = await findFollowingAccounts(driver)
-      // sometimes, the following count is off by one or two, dunno why, it's insta being weird
-      if (accounts.length >= following - 1) {
+      if (accounts.length >= following) {
+        console.log(`Received all followings for '${user.name}'. Moving on.`)
         break
       }
       if (accounts.length === rateLimitedCache.lastLength) {
-        if (rateLimitedCache.noChangeCounter >= 10) {
+        // TODO: Add rate limited check (loading icon)
+        if (rateLimitedCache.noChangeCounter >= 5) {
           console.log(
-            'We are definitely rate limited, shutting down. Please try again later.',
+            `It seems all followings for '${
+              user.name
+            }' have been loaded. Moving on. (${
+              following - accounts.length
+            } missed)`,
           )
-          rateLimited = true
           break
         }
         console.log(
-          `We might be rate limited, iteration ${
+          `Following counter didn't change, iteration ${
             rateLimitedCache.noChangeCounter + 1
           }`,
         )
@@ -122,21 +140,22 @@ async function navigate(
       await scrollDownFollowList(driver)
       await sleep(driver, 2000, 3000)
     }
-    const followings = await getFollowingAccounts(driver)
-    console.log(`Storing ${followings.length} followings for ${user.name}`)
 
-    // we received all the followings, let's store them in the export file
+    if (rateLimited) {
+      // we are rate limited, let's quit
+      // await quit(driver, 0)
+      exit(0)
+      return
+    }
+
+    const followings = await getFollowingAccounts(driver)
+    console.log(`Storing ${followings.length} followings for '${user.name}'`)
     exportData.push({
       name: user.name,
       followings,
     })
     await writeExport(exportData)
 
-    if (rateLimited) {
-      // we are rate limited, let's quit
-      await quit(driver, 0)
-      return
-    }
     // update data so we don't check the user again
     await nextEntry(importDataCopy)
 
