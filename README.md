@@ -67,6 +67,12 @@ You can click through the network manually or tinker with the presentation code 
 
 Nodes further away from the clicked node are usually the most interesting ones as they indicate that a person knows a person from a different cluster.
 
+### Step 7: Use the ignored.json (optional)
+
+Since I don't care about celebrity / corporate accounts and meme pages in my visualization, I created a `ignored.json` file in `/presentation/public` which contains a non-exhaustive list of accounts which I don't want to appear in my visualization.
+
+Feel free to add more accounts to this list (you can use the `Copy active node` button to copy usernames) to further filter your network.
+
 ## License
 
 This project is licensed under the terms of the [MIT License](https://choosealicense.com/licenses/mit/).
