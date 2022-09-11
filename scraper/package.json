@@ -2,7 +2,7 @@
   "name": "instagram-following-network-scraper",
   "version": "1.0.0",
   "author": "Joshua Winkler <joshua.winkler@student.uibk.ac.at>",
-  "license": "ISC",
+  "license": "MIT",
   "private": true,
   "scripts": {
     "start": "ts-node src/index.ts",

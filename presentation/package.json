@@ -1,8 +1,8 @@
 {
   "name": "instagram-following-network-presentation",
   "version": "1.0.0",
-  "author": "Joshua Winkler <joshua.winkler@uibk.ac.at>",
-  "license": "ISC",
+  "author": "Joshua Winkler <joshua.winkler@student.uibk.ac.at>",
+  "license": "MIT",
   "private": true,
   "scripts": {
     "bundle": "browserify main.js -p esmify -o public/bundle.js",
@@ -10,15 +10,15 @@
     "dev": "nodemon --exec 'yarn devbundle'",
     "format": "prettier --write ."
   },
+  "dependencies": {
+    "d3": "^7.6.1"
+  },
   "devDependencies": {
     "browserify": "^17.0.0",
     "esmify": "^2.1.1",
     "nodemon": "^2.0.19",
     "prettier": "^2.7.1",
     "serve": "^14.0.1"
-  },
-  "dependencies": {
-    "d3": "^7.6.1"
   },
   "nodemonConfig": {
     "ignore": ["public/bundle*.*"]
