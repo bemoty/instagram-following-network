@@ -7,7 +7,7 @@ Inspired by [a Medium post](https://medium.com/@maximpiessen/how-i-visualised-my
 
 ![Application screenshot](/.github/screenshot.png)
 
-This project was a lot of fun and I found out a lot of interesting facts about the connections between my circle of friends.
+This project was a lot of fun and I found out a lot of interesting facts about the connections between my different circles of friends.
 
 ## Installation & How To Use
 
