@@ -6,6 +6,7 @@ import {
   findFollowingButton,
   getFollowingAccounts,
   getFollowingNumber,
+  isLoading,
   scrollDownFollowList,
   sleep,
 } from './interact'
@@ -107,7 +108,6 @@ async function navigate(
       lastLength: -1,
       noChangeCounter: 0,
     }
-    let rateLimited = false
     for (;;) {
       let accounts = await findFollowingAccounts(driver)
       if (accounts.length >= following) {
@@ -117,6 +117,10 @@ async function navigate(
       if (accounts.length === rateLimitedCache.lastLength) {
         // TODO: Add rate limited check (loading icon)
         if (rateLimitedCache.noChangeCounter >= 5) {
+          if (await isLoading(driver)) {
+            console.log('Instagram blocked us, exiting.')
+            await quit(driver, 0)
+          }
           console.log(
             `It seems all followings for '${
               user.name
@@ -139,13 +143,6 @@ async function navigate(
       await sleep(driver, 2000, 2500)
       await scrollDownFollowList(driver)
       await sleep(driver, 2000, 3000)
-    }
-
-    if (rateLimited) {
-      // we are rate limited, let's quit
-      // await quit(driver, 0)
-      exit(0)
-      return
     }
 
     const followings = await getFollowingAccounts(driver)
