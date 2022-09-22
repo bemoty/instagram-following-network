@@ -8,9 +8,10 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div class="position-absolute vw-100 vh-100 d-flex align-items-center justify-content-center bg-black text-white" id="loading" style="z-index: 9999;">
-      <h1>Loading...</h1><br/>
-      <p>This can take up to a minute</p>
+    <div class="position-absolute vw-100 vh-100 d-flex align-items-center justify-content-center flex-column bg-black text-white" id="loading" style="z-index: 9999;">
+      <h1>Loading...</h1>
+      <p>We are loading a lot of data on a single core, this can take a while</p>
+      <p class="status"></p>
     </div>
     <div class="position-absolute">
       <div class="container-sm d-flex bg-light rounded flex-column m-3 p-4 text-center">

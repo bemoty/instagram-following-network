@@ -9,39 +9,27 @@ const doneLoading = () => {
   document.getElementById('loading').remove()
 }
 
-const prepareData = (data, ignored) => {
-  const allFollowings = data.flatMap((usr) => usr.followings)
-  const nodes = [
-    ...new Set(
-      allFollowings
-        .filter(
-          (usr) => allFollowings.filter((name) => name === usr).length >= 2, // remove users who are only followed once ...
-        )
-        .concat(data.map((usr) => usr.name)),
-    ),
-  ].filter((usr) => !ignored.includes(usr))
-  const links = []
-  for (let i = 0; i < data.length; i++) {
-    const source = nodes.indexOf(data[i].name)
-    if (source === -1) {
-      continue
-    }
-    for (let j = 0; j < data[i].followings.length; j++) {
-      const target = nodes.indexOf(data[i].followings[j])
-      if (target == -1) {
-        continue
-      }
-      links.push({ source, target })
-    }
-  }
-  return {
-    nodes: nodes.map((name) => ({ name })),
-    links,
-  }
+const setLoadingStatus = (num, status) => {
+  document.querySelector('#loading .status').innerHTML = `Step ${num}: ${status}`
 }
 
-const generateChart = (data, ignored) => {
-  const { nodes, links } = prepareData(data, ignored)
+/**
+ * Preparing the graph data is quite CPU intensive, so we do it in a web worker.
+ */
+const prepareData = (data, ignored) => {
+  return new Promise((resolve) => {
+    const worker = new Worker('loadDataWorker.js')
+    worker.onmessage = (e) => {
+      resolve(e.data)
+    }
+    worker.postMessage({ data, ignored })
+  })
+}
+
+const generateChart = async (data, ignored) => {
+  setLoadingStatus(1, 'Preparing data')
+  const { nodes, links } = await prepareData(data, ignored)
+  setLoadingStatus(2, 'Rendering chart')
 
   var circleObjects
   var linkObjects
@@ -223,6 +211,10 @@ const generateChart = (data, ignored) => {
 }
 
 ;(async () => {
+  if (!window.Worker) {
+    alert('This browser does not support web workers. Cannot run this application')
+    return
+  }
   const data = await d3.json(file).then((data) => data)
   const ignored = await d3.json('ignored.json').then((data) => data)
   generateChart(data, ignored)
