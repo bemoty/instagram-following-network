@@ -1,5 +1,5 @@
 const prepareData = (data, ignored) => {
-  const allFollowings = data.flatMap((usr) => usr.followings)
+  const allFollowings = data.flatMap((usr) => usr.followings).filter((usr) => !ignored.includes(usr))
   const nodes = [
     ...new Set(
       allFollowings
@@ -8,7 +8,7 @@ const prepareData = (data, ignored) => {
         )
         .concat(data.map((usr) => usr.name)),
     ),
-  ].filter((usr) => !ignored.includes(usr))
+  ]
   const links = []
   for (let i = 0; i < data.length; i++) {
     const source = nodes.indexOf(data[i].name)
