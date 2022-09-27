@@ -43,17 +43,23 @@ You can copy a querySelector string from DevTools by right-clicking the element 
 
 ### Step 3: Install Chromium and/or Chromedriver
 
-TODO
+Depending on your operating system, there may be different steps needed to install Chromedriver. See the [official Chromedriver website](https://chromedriver.chromium.org/) for more information on this topic.
 
 ### Step 4: Scrape your own followings
 
-TODO
+Before you can scrape the followings of others, you will need to scrape your own followings. For this, you can simply use the create command
+
+```shell
+yarn start create <username>
+```
+
+The program will then scrape all your followings and save them in the `import.json` file. The first time you do this, the application will ask you to log in, as it otherwise cannot retrieve the following count. Log in and re-run the app.
+
+You might also want to manually inspect to `import.json` file to remove any users that you do not want to scrape.
 
 ### Step 5: Let the scraper do it's job, repeatedly
 
 Now, simply run the scraper by opening a terminal in the `/scraper` directory and running `yarn start`.
-
-The first time you do this, the application will ask you to log in, as it otherwise cannot retrieve the following count. Log in and re-run the app.
 
 A Chromium browser window will open and automatically navigate to the profiles scraped in step 2. The scraper will automatically shut down once it detects that Instagram has blocked you and exits.
 
