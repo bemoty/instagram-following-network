@@ -5,5 +5,11 @@ export interface Export {
 
 export interface Import {
   name: string
-  famous: boolean
+  ignored: boolean
+}
+
+export class FatalError extends Error {
+  constructor(message: string, public exitCode: number) {
+    super(message)
+  }
 }
