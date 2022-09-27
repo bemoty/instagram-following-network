@@ -31,8 +31,6 @@ const generateChart = async (data, ignored) => {
   const { nodes, links } = await prepareData(data, ignored)
   setLoadingStatus(2, 'Rendering chart')
 
-  var circleObjects
-  var linkObjects
   var focusedNode
   var rootNode
   var hoveredNode
