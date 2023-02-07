@@ -38,7 +38,7 @@ export async function getFollowings(
       return []
     case -1:
       throw new Error(
-        `Could not retrieve following number for '${username}' (Deleted user?)`,
+        `Could not retrieve following number for '${username}' - this can happen if the user is deleted, you are not logged in or the selectors are outdated`,
       )
     case -2:
       throw new FatalError(

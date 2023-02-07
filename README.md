@@ -53,7 +53,7 @@ Before you can scrape the followings of others, you will need to scrape your own
 yarn start create <username>
 ```
 
-The program will then scrape all your followings and save them in the `import.json` file. The first time you do this, the application will ask you to log in, as it otherwise cannot retrieve the following count. Log in and re-run the app.
+The program will then scrape all your followings and save them in the `import.json` file. The first time you do this, the application will ask you to log in, as it otherwise cannot retrieve the following count. Accept essential cookies, log in and re-run the app.
 
 You might also want to manually inspect to `import.json` file to remove any users that you do not want to scrape.
 

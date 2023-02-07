@@ -1,11 +1,7 @@
 import { argv } from 'process'
 import { Builder, WebDriver } from 'selenium-webdriver'
 import chrome from 'selenium-webdriver/chrome'
-import {
-  createImportBackup,
-  readExport,
-  readImport, writeImport
-} from './io'
+import { createImportBackup, readExport, readImport, writeImport } from './io'
 import { getFollowings, populateExportData } from './main'
 import { FatalError } from './models'
 import { quit } from './util'
@@ -21,11 +17,16 @@ async function main(args: string[]) {
 
   if (args.length === 0) {
     await processImportFile(driver)
+    await quit(driver)
   } else if (args.length === 2) {
     const command = args[0]
     const arg = args[1]
     if (command === 'create') {
-      await createImportFile(driver, arg)
+      let imported = await createImportFile(driver, arg)
+      if (imported.length !== 0) {
+        // Import successful, don't need browser anymore
+        await quit(driver)
+      }
     } else {
       console.error('Unknown command')
       await quit(driver, -1)
@@ -35,7 +36,6 @@ async function main(args: string[]) {
     await quit(driver, -1)
   }
   console.log("We're done here...")
-  await quit(driver)
 }
 
 async function processImportFile(driver: WebDriver) {
@@ -61,15 +61,18 @@ async function processImportFile(driver: WebDriver) {
 
 async function createImportFile(driver: WebDriver, username: string) {
   console.log('Creating import file...')
-  const followings = await getFollowings(driver, username).catch(async (err) => {
-    console.error(err)
-    if (err instanceof FatalError) {
-      await quit(driver, err.exitCode)
-    }
-    return []
-  })
+  const followings = await getFollowings(driver, username).catch(
+    async (err) => {
+      console.error(err)
+      if (err instanceof FatalError) {
+        await quit(driver, err.exitCode)
+      }
+      return []
+    },
+  )
   // TODO: Create ignore list for populating ignored boolean
   await writeImport(followings.map((name) => ({ name, ignored: false })))
+  return followings
 }
 
 main(argv.slice(2))
